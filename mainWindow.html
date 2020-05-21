@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="css/Materialize/css/materialize.css">
+    <style>
+        label {
+            color: black;
+        }
+    </style>
+    <title>Projects</title>
+</head>
+<body>
+    <nav>
+        <div class='nav-wrapper blue darken-2'>
+            <a class='brand-logo center'>Project Search</a>
+        </div>
+    </nav>
+    <div class='section'>
+        <button type="button " id='addProject' class='btn waves-effect waves-light' onClick="openAddProjectWindow()">Add Project</button>
+    </div>
+    <div class='section search-parameters'>
+        <form>
+            <div class='row'>
+                <h5>Search Parameters: </h1>
+                <div class='col s12 m12 l6'>
+                    <label>Project Number</label>
+                    <input type='text'  id='projectNumber' onkeypress="search()" onblur="search()" autofocus>
+
+                    <label>Project Name</label>
+                    <input type="text" id='projectName' onkeypress="search()" onblur="search()">
+
+                    <label>Fee minimum</label>
+                    <input type=number id='feeMin' onkeypress="search()" onblur="search()">
+
+                    <label>Fee Maximum</label>
+                    <input type=number id='feeMax' onkeypress="search()" onblur="search()">
+
+                    <label>Construction Cost Minimum</label>
+                    <input type=number id='constructionMin' onkeypress="search()" onblur="search()">
+
+                    <label>Archive</label>
+                    <input type="text" id='archive' onkeypress="search()" onblur="search()">
+                </div>
+                <div class='col s12 m12 l6'>
+                    <label>construction Cost Maximum</label>
+                    <input  type=number id='constructionMax' onkeypress="search()" onblur="search()">
+                    
+                    <label>Project Type</label>
+                    <input type=text id='projectType' onkeypress="search()" onblur="search()">
+
+                    <label>Year</label>
+                    <input type='text' id='year' onkeypress="search()" onblur="search()">
+
+                    <label>Description</label>
+                    <input type='text' id='description' onkeypress="search()" onblur="search()">
+
+                    <label>Keywords</label>
+                    <input type='text' id='keywords' onkeypress="search()" onblur="search()">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class='row'>
+        <div class='col s12'>
+            <ul class="pagination" id="search-result-page-selection">
+
+            </ul>
+        </div>
+    </div>
+
+    <div class='row'>
+        <div class='col s12'>
+            <div class='section search-results'>
+                <ul id="results-list" class="collapsible expandable">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+
+    
+
+    <script type="text/javascript" src='css/Materialize/js/materialize.min.js'> </script>
+    <script>
+        const electron = require('electron');
+        const {ipcRenderer} = electron;
+        var projectList=null;
+        var searchCache = [];
+        //Add listeners
+        //Receive projects to display
+        ipcRenderer.on('project:recieve',function(e, projects){
+            console.log(projects);
+            projectList = projects;
+            let step=100;
+            this.searchCache = [];
+            for(let i=0;i<Math.ceil(length/step);i++ ){
+                this.searchCache.push(null);
+            }
+            fillProjectList(projects, 0, step);
+        });
+
+        ipcRenderer.on('INITIAL_SEARCH',(event)=>{
+            search();
+        });
+
+        //Do stuff when window is scrolled
+        /*window.onscroll = function(ev) {
+        //Check if user is at the bottom of search results
+            if ((window.innerHeight + window.pageYOffset) >= document.body.offsetHeight) {
+                //Fill in more search results
+                if(projectList!=null){
+                    //searchResultMax +=searchResultMax>projectList.length?0:searchStep;//Add step amount if below number of results, add nothing if at result
+                    addProjectList(this.projectList);
+                }
+            }
+        };*/
+        
+        //Load initial list of projects
+        //search();
+        function changeResultsPage(page){
+            fillProjectList(this.projectList,page,100)
+        }
+
+        function searchPageSelection(length, step, selectedPage){
+            let pages = document.getElementById('search-result-page-selection');
+            var html ='';
+            let numPages = Math.ceil(length/step); 
+            pages.innerHTML ='';
+            if(numPages>1){
+                if(selectedPage ==0){
+                    html += '<li class="disabled"><a href="#!"><i class="material-icons">&#60;</i></a></li>';
+                }else{
+                    html += '<li class="waves-effect"><a href="#!" onclick="changeResultsPage('+(selectedPage-1)+')"><i class="material-icons">&#60;</i></a></li>';
+                }
+                
+                for(let i=0;i<numPages;i++){
+                    
+                    if(i==selectedPage){
+                        html += '<li class="active"><a href="#!" >'+i+'</a></li>';
+                    }else{
+                        html += '<li class="waves-effect"><a href="#!" onclick="changeResultsPage('+i+')">'+i+'</a></li>';
+                    }
+                }
+                if(selectedPage == numPages-1){
+                    html += '<li class="disabled"><a href="#!"><i class="material-icons">&#62;</i></a></li>';
+                }else{
+                    html +='<li class="waves-effect"><a href="#!" onclick="changeResultsPage('+(selectedPage+1)+')"><i class="material-icons">&#62;</i></a></li>';
+                }
+                
+                pages.innerHTML = html;
+            }
+        }
+
+        function search(){
+            let parameters = {
+                projectNumber : '',
+                projectName : '',
+                feeMin : '',
+                feeMax : '',
+                constructionMin : '',
+                constructionMax : '',
+                projectType : '',
+                year : '',
+                description : '',
+                keywords : '',
+                archive: '',
+            };
+            parameters.projectNumber = document.querySelector('#projectNumber').value,
+            parameters.projectName = document.querySelector('#projectName').value,
+            parameters.feeMin = document.querySelector('#feeMin').value,
+            parameters.feeMax = document.querySelector("#feeMax").value,
+            parameters.constructionMin = document.querySelector('#constructionMin').value,
+            parameters.constructionMax = document.querySelector('#constructionMax').value,
+            parameters.projectType = document.querySelector('#projectType').value,
+            parameters.year = document.querySelector('#year').value,
+            parameters.description = document.querySelector('#description').value,
+            parameters.keywords = document.querySelector('#keywords').value
+            parameters.archive = document.querySelector('#archive').value
+            getProjects(parameters);
+        }
+
+        function openAddProjectWindow(){
+            ipcRenderer.send('project:addWindow');
+        }
+
+        function saveProjectEdit(projectId){
+            let project = {
+                projectId: projectId,
+                number: 0,
+                name: '',
+                fee: 0,
+                constructionCost: 0,
+                type: '',
+                year: 0,
+                description: '',
+                archive: '',
+                keywords:'',
+            };
+            //Get info from form
+            project.number = document.querySelector('#project'+projectId+'ProjectNumber').value;
+            project.name = document.querySelector('#project'+projectId+'ProjectName').value;
+            project.fee = document.querySelector('#project'+projectId+'ProjectFee').value;
+            project.constructionCost = document.querySelector('#project'+projectId+'ConstructionCost').value;
+            project.type = document.querySelector('#project'+projectId+'ProjectType').value;
+            project.year = document.querySelector('#project'+projectId+'Year').value;
+            project.description = document.querySelector('#project'+projectId+'Description').value;
+            project.archive = document.querySelector('#project'+projectId+'Archive').value;
+            project.keywords = document.querySelector('#project'+projectId+'Keywords').value;
+            //Send project infromation to main.js
+            ipcRenderer.send('project:update', project);
+        }
+
+        function deleteProject(projectId){
+            //Remove information for this project from list
+            let itemTag = 'project'+projectId+'Info';
+            document.getElementById(itemTag).outerHTML = "";
+            ipcRenderer.send('project:delete', projectId);
+        }
+
+        function fillProjectList(projects, page, step){
+            searchPageSelection(projects.length, step, page);
+            var resultList = document.getElementById('results-list');
+            resultList.innerHTML ='';
+            if(searchCache[page]==null){
+                searchCache='';
+                let items='';
+                for(let i=(page*step);(i<projects.length) && (i<((page+1)*step));i++){
+                    let item = projectListItem(projects, i);
+                    items += item;  
+                }
+                resultList.innerHTML = items;
+                searchCache[page] = items;
+            }else{
+                resultList.innerHTML = searchCache[page];
+            }
+
+            var elems = document.querySelectorAll('.collapsible');
+                var instances = M.Collapsible.init(elems, {
+                    accordion: false
+                });
+        }
+
+        function getProjects(parameters){
+            ipcRenderer.send('project:retrieveList',parameters);
+        }
+
+        //Makes the results collapsed
+        function addCollapsableEvent(){
+            document.addEventListener('DOMContentLoaded', function() {
+                var elems = document.querySelectorAll('.collapsible');
+                var instances = M.Collapsible.init(elems, {
+                    accordion: false
+                });
+            });  
+        }
+
+        function projectListItem(projects, i){
+            let item = '<li id="project'+projects[i]['project']+'Info">';
+                item += i%2==0?'<div class="collapsible-header blue lighten-4">':'<div class="collapsible-header blue lighten-2">';
+                    item += '<div class="col s12 m6 l6">';
+                        item+= '<label>Project Number</label><input type="text" value="'+projects[i]['project_number']+'" id="project'+projects[i]['project']+'ProjectNumber" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                    item += '</div>';
+                    item += '<div class="col s12 m6 l6">';
+                        item+= '<label>Project Name</label><input type="text" value="'+projects[i]['project_name']+'"id="project'+projects[i]['project']+'ProjectName" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                    item += '</div>';
+                item += '</div>';
+
+                item += '<div class="collapsible-body">';
+                    item +='<div class="row">';
+                    //Delete a project button 
+                        item+='<a class="waves-effect waves-light btn" onClick="deleteProject('+projects[i]['project']+')">REMOVE</a>';
+                    item +='</div>';
+                    item +='<div class="row">'
+                        item += '<div class="col s12 m6 l6">';
+                            item+= '<label>Project Fee $</label><input type=number value="'+projects[i]['fee']+'"id="project'+projects[i]['project']+'ProjectFee" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                        item += '</div>';
+
+                        item += '<div class="col s12 m6 l6">';
+                            item += '<span>';
+                                item+= '<label>Construction Cost $</label><input type=number value="'+projects[i]['construction_cost']+'" id="project'+projects[i]['project']+'ConstructionCost" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                            item += '</span>';
+                        item += '</div>';
+                    item += '</div>';
+
+                    item +='<div class="row">'
+                        item += '<div class="col s12 m6 l6">';
+                            item+= '<label>Project Type</label><input type="text" value="'+projects[i]['project_type']+'" id="project'+projects[i]['project']+'ProjectType" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                        item += '</div>';
+                                
+                        item += '<div class="col s12 m6 l6">';
+                            item+= '<label>Year</label><input type="text" value="'+projects[i]['year']+'" id="project'+projects[i]['project']+'Year" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                        item += '</div>';
+                    item += '</div>';
+                    item +='<div class="row">'
+                        item += '<div class="col s12 m6 l6">';
+                            item+= '<label>Archive</label><input type="text" value="'+projects[i]['archive']+'" id="project'+projects[i]['project']+'Archive" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                        item += '</div>';
+                                
+                                /*item += '<div class="col s12 m6 l6">';
+                                    item+= '<label>Year</label><input type="text" value="'+projects[i]['year']+'" id="project'+projects[i]['project']+'Year" onblur="saveProjectEdit('+projects[i]['project']+')" autofocus>';
+                                item += '</div>';*/
+                    item += '</div>';
+
+                    item +='<div class="row">';
+                        item += '<div class="col s12 m12 l12">';
+                            item += '<label>Description</label>';
+                            item += '<textarea id="project'+projects[i]['project']+'Description" onblur="saveProjectEdit('+projects[i]['project']+')">';
+                                item += projects[i]['description'];
+                            item+='</textarea>';
+                        item += '</div>';    
+                    item += '</div>';
+
+                    item +='<div class="row">';
+                        item += '<div class="col s12 m12 l12">';
+                            item += '<label>Keywords (seperate by spaces)</label>';
+                            item += '<textarea id="project'+projects[i]['project']+'Keywords" onblur="saveProjectEdit('+projects[i]['project']+')">';
+                                item += projects[i]['keywords'];
+                            item+='</textarea>';
+                        item += '</div>';      
+                    item += '</div>';
+
+                item += '</div>';
+            item +='</li>';
+            return item;
+        }
+
+    </script>
+</body>
+</html>

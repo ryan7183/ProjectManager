@@ -1,0 +1,11 @@
+directories:
+  output: dist
+  buildResources: build
+productName: Project Database
+appId: com.electron.projectmanager
+win:
+  target:
+    - portable
+portable:
+  artifactName: project_database.exe
+electronVersion: 8.2.5

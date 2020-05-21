@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="../css/Materialize/css/materialize.css">
+    <title>Projects</title>
+</head>
+<style>
+    
+</style>
+<body>
+    <nav>
+        <div class='nav-wrapper blue darken-2'>
+            <a class='brand-logo center'>Add Project Information</a>
+        </div>
+    </nav>
+
+    <div class='search'>
+        <form>
+            <div id='projectInformation'>
+                <label>Project Number</label>
+                <input type='text' id='projectNumber' autofocus>
+
+                <label>Project Name</label>
+                <input type="text" id='projectName' >
+
+                <label>Fee</label>
+                <input type=number id='fee'>
+
+                <label>Construction Cost</label>
+                <input type=number id='constructionCost'>
+                
+                <label>Project Type</label>
+                <input type="text" id='projectType'>
+
+                <label>Year</label>
+                <input type='text' id='year'>
+
+                <label>Archive</label>
+                <input type='text' id='archive'>
+
+                <label>Description</label>
+                <textarea id='description'></textarea>
+
+                <label>Keywords (seperate by spaces)</label>
+                <textarea id='keywords'></textarea>
+            </div>
+            
+            <button class='btn waves-effect waves-light' type='submit'>Add Project</button>
+        </form>
+    </div>
+
+    
+
+    <script type="text/javascript" src='../css/Materialize/js/materialize.min.js'> </script>
+    <script>
+        const electron = require('electron');
+        const {ipcRenderer} = electron;
+        
+        const form = document.querySelector('form');
+        form.addEventListener('submit', submitForm);
+
+        //Handle form submission
+        function submitForm(e){
+            //Prevent default handling of form, to be handled manually
+            e.preventDefault();
+            let project = {
+                number: 0,
+                name: '',
+                fee: 0,
+                constructionCost: 0,
+                type: '',
+                year: 0,
+                description: '',
+                archive:'',
+                keywords:'',
+            };
+            //Get info from form
+            project.number = document.querySelector('#projectNumber').value;
+            project.name = document.querySelector('#projectName').value;
+            project.fee = document.querySelector('#fee').value;
+            project.constructionCost = document.querySelector('#constructionCost').value;
+            project.type = document.querySelector('#projectType').value;
+            project.year = document.querySelector('#year').value;
+            project.description = document.querySelector('#description').value;
+            project.archive = document.querySelector('#archive').value;
+            project.keywords = document.querySelector('#keywords').value;
+            //Send project infromation to main.js
+            ipcRenderer.send('project:add', project);
+            window.close();
+        }
+
+        
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "name": "projectmanager",
+  "version": "1.0.0",
+  "description": "Track project information. ",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/mac/icon.icns --prune=true --out=release-builds",
+    "package-win": "electron-packager . project-manager --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icons/win/find_circle.svg --prune=true --out=release-builds --version-string.CompanyName=SEI --version-string.FileDescription=SEI --version-string.ProductName=\"Projects\"",
+    "package-linux": "electron-packager . project-manager-app --overwrite --asar=true --platform=linux --arch=x64 --icon=assets/icons/win/find_circle.svg --prune=true --out=release-builds",
+    "rebuild": "electron-rebuild -f -w sqlite3"
+  },
+  "author": "Ryan Seguin",
+  "license": "ISC",
+  "dependencies": {
+    "excel4node": "^1.7.2",
+    "knex": "^0.20.15",
+    "read-excel-file": "^4.0.6",
+    "sqlite3": "^4.2.0"
+  },
+  "devDependencies": {
+    "check-node-version": "^4.0.3",
+    "electron": "^8.2.5",
+    "electron-builder": "^22.6.0",
+    "electron-packager": "^14.2.1",
+    "electron-rebuild": "^1.10.1"
+  },
+  "build": {
+    "productName": "Project Database",
+    "appId": "com.electron.projectmanager",
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "portable": {
+      "artifactName": "project_database.exe"
+    }
+  }
+}
