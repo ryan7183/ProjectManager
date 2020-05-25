@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <link rel="stylesheet" href="../css/Materialize/css/materialize.css">
     <title>Projects</title>
 </head>
 <style>
-    
+
 </style>
+
 <body>
     <nav>
         <div class='nav-wrapper blue darken-2'>
@@ -14,21 +16,22 @@
         </div>
     </nav>
 
-    <div class='search'>
+    <!-- Section for inserting project information -->
+    <div class='information'>
         <form>
             <div id='projectInformation'>
                 <label>Project Number</label>
                 <input type='text' id='projectNumber' autofocus>
 
                 <label>Project Name</label>
-                <input type="text" id='projectName' >
+                <input type="text" id='projectName'>
 
                 <label>Fee</label>
                 <input type=number id='fee'>
 
                 <label>Construction Cost</label>
                 <input type=number id='constructionCost'>
-                
+
                 <label>Project Type</label>
                 <input type="text" id='projectType'>
 
@@ -44,23 +47,26 @@
                 <label>Keywords (seperate by spaces)</label>
                 <textarea id='keywords'></textarea>
             </div>
-            
+
             <button class='btn waves-effect waves-light' type='submit'>Add Project</button>
         </form>
     </div>
 
-    
 
-    <script type="text/javascript" src='../css/Materialize/js/materialize.min.js'> </script>
+
+    <script type="text/javascript" src='../css/Materialize/js/materialize.min.js'>
+    </script>
     <script>
         const electron = require('electron');
-        const {ipcRenderer} = electron;
-        
+        const {
+            ipcRenderer
+        } = electron;
+
         const form = document.querySelector('form');
         form.addEventListener('submit', submitForm);
 
         //Handle form submission
-        function submitForm(e){
+        function submitForm(e) {
             //Prevent default handling of form, to be handled manually
             e.preventDefault();
             let project = {
@@ -71,8 +77,8 @@
                 type: '',
                 year: 0,
                 description: '',
-                archive:'',
-                keywords:'',
+                archive: '',
+                keywords: '',
             };
             //Get info from form
             project.number = document.querySelector('#projectNumber').value;
@@ -88,9 +94,7 @@
             ipcRenderer.send('project:add', project);
             window.close();
         }
-
-        
-
     </script>
 </body>
+
 </html>
